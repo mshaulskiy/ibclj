@@ -56,7 +56,7 @@ public class MyIbController implements ApiController.IConnectionHandler {
     }
 
     public void connect(String host, int port, int clientId){
-        controller.connect(host, port, clientId);
+        controller.connect(host, port, clientId,"");
     }
 
     public void disconnect() {
@@ -65,7 +65,7 @@ public class MyIbController implements ApiController.IConnectionHandler {
 
     public static void main(String[] args){
         MyIbController c = new MyIbController();
-        c.connect("10.0.1.10", 7497, 5);
+        c.connect("localhost", 7497, 5);
 
         try {
             Thread.sleep(10000);
