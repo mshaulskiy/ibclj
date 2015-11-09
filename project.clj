@@ -8,5 +8,5 @@
                  ]
   :java-source-paths ["src/java" "test/java"]
   :source-paths ["src/clj"]
-  :main ibclj.core
+  :main ibclj.MyIbController
   )
