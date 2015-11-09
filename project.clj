@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [com.quantechlab/ibclient "9.72.09"]
+                 [com.quantechlab/ibclient "9.70.01"]
                  ]
   :java-source-paths ["src/java" "test/java"]
   :source-paths ["src/clj"]

@@ -17,26 +17,26 @@
 (defn create-controller []
   (reify
     com.ib.controller.ApiController$IConnectionHandler
-    (accountList [this list] (println "AccountList" list))
-    (message [this id error-code error-msg] (println id error-code error-msg))
-    (error [this e] (println e))
-    (show [this msg] (println msg))
-    (connected [this] (println "We are connected!"))
-    (disconnected [this] (println "We are diconnected!"))
+    (accountList [this list] (print "AccountList" list))
+    (message [this id error-code error-msg] (print id error-code error-msg))
+    (error [this e] (print e))
+    (show [this msg] (print msg))
+    (connected [this] (print "We are connected!"))
+    (disconnected [this] (print "We are diconnected!"))
 
     ))
 
 (defn api-ctrl []
   (com.ib.controller.ApiController. (create-controller)
                                     (reify com.ib.controller.ApiConnection$ILogger
-                                      (log [this s] (println s)))
+                                      (log [this s] (print s)))
                                     (reify com.ib.controller.ApiConnection$ILogger
-                                      (log [this s] (println s)))))
+                                      (log [this s] (print s)))))
 
 
 (defn start []
   (let [api (api-ctrl)]
-    (.connect api "localhost" 7497 5 "")
+    (.connect api "localhost" 7497 5)
     (Thread/sleep 1000)
     (.disconnect api)))
 
