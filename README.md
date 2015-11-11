@@ -1,6 +1,6 @@
 # ibclj
 
-A Clojure library designed to ... well, that part is up to you.
+The Clojure project to get financial market ticks data from Interactive Brokers connection api
 
 ## Usage
 
