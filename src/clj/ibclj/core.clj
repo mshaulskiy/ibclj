@@ -40,9 +40,9 @@
     (tickPrice [this tick-type p auto-execute?]
       (println (format "tick: %s price: %s" tick-type  p)))
     (tickSize [this tick-type size]
-      (println (format "type: %s size: %s" tick-type " " size)))
+      (println (format "type: %s size: %s" tick-type size)))
     (tickString [this tick-type val]
-      (println (format  "Last time, type: %s value: %d") val))
+      (println (format  "Last time, type: %s value: %d" tick-type val) ))
     (marketDataType [this data-type]
       (println "Frozen? " (= data-type com.ib.controller.Types$MktDataType/Frozen)))
     (tickSnapshotEnd [this] (println "tick snapshot end"))
@@ -56,7 +56,7 @@
     (.connect api "localhost" 7497 5)
     (.reqTopMktData api c "" false row)
 
-    (Thread/sleep 1000)
+    (Thread/sleep 100000)
     (.cancelTopMktData api row)
     (.disconnect api)))
 
