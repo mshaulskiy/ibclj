@@ -4,7 +4,9 @@ A Clojure library designed to ... well, that part is up to you.
 
 ## Usage
 
-FIXME
+* download latest.edemo.mac.jnlp from https://www.interactivebrokers.com
+* download TwsApi.jar from https://www.interactivebrokers.com
+* mvn install:install-file -DgroupId=com.quantechlab -DartifactId=ibclient -Dversion=9.72.09 -Dpackaging=jar -Dfile=TwsApi.jar
 
 ## License
 
