@@ -1,5 +1,7 @@
 (ns ibclj.core
-  [:import  com.ib.controller.ApiController])
+  [:import com.ib.controller.ApiController
+           (com.ib.controller ApiController$TopMktDataAdapter)
+           ibclj.DataRow])
 
 
 (defn create-controller []
@@ -35,18 +37,7 @@
                                       (log [this s] (print s)))))
 
 (defn create-row []
-  (reify
-    com.ib.controller.ApiController$ITopMktDataHandler
-    (tickPrice [this tick-type p auto-execute?]
-      (println (format "tick: %s price: %s" tick-type  p)))
-    (tickSize [this tick-type size]
-      (println (format "type: %s size: %s" tick-type size)))
-    (tickString [this tick-type val]
-      (println (format  "Last time, type: %s value: %d" tick-type val) ))
-    (marketDataType [this data-type]
-      (println "Frozen? " (= data-type com.ib.controller.Types$MktDataType/Frozen)))
-    (tickSnapshotEnd [this] (println "tick snapshot end"))
-    ))
+  (ibclj.DataRow.))
 
 
 (defn start []

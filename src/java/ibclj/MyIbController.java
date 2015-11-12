@@ -100,7 +100,7 @@ public class MyIbController implements ApiController.IConnectionHandler {
     }
 
 
-    class DataRow extends ApiController.TopMktDataAdapter {
+    public class DataRow extends ApiController.TopMktDataAdapter {
 
         @Override public void tickPrice(NewTickType tickType, double price, int canAutoExecute) {
             switch( tickType) {
@@ -159,7 +159,7 @@ public class MyIbController implements ApiController.IConnectionHandler {
         c.reqTopMktData(contract, "", false, row);
 
         try {
-            Thread.sleep(100000);
+            Thread.sleep(10000000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
