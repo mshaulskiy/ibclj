@@ -2,6 +2,8 @@
 
 The Clojure project to get financial market ticks data from Interactive Brokers connection api
 
+[![Build Status](https://travis-ci.org/nabacg/ibclj.svg?branch=master)](https://travis-ci.org/nabacg/ibclj.svg)
+
 ## Usage
 
 * download latest.edemo.mac.jnlp from https://www.interactivebrokers.com
