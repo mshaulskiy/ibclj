@@ -1,4 +1,8 @@
 (ns ibclj.core
+  (:require [clojure.core.async
+             :as a
+             :refer [>! <! >!! <!! go chan buffer close! thread
+                     alts! alts!! timeout go-loop]])
   [:import com.ib.controller.ApiController
            (com.ib.controller ApiController$TopMktDataAdapter)
            ])
@@ -39,15 +43,21 @@
                                         ))))
 
 
-(defn create-row []
+(defn create-row [c]
   (reify
     com.ib.controller.ApiController$ITopMktDataHandler
     (tickPrice [this tick-type p auto-execute?]
-      (println (.name tick-type) "price: " p))
+      ;(println (.name tick-type) "price: " p)
+      (>!! c [(.name tick-type) p])
+      )
     (tickSize [this tick-type size]
-      (println (.name tick-type) "size: " size))
+      ;(println (.name tick-type) "size: " size)
+      (>!! c [(.name tick-type) size])
+      )
     (tickString [this tick-type val]
-      (println (.name tick-type) "LastTime: " val))
+      ;(println (.name tick-type) "LastTime: " val)
+      (>!! c [(.name tick-type) val])
+      )
     (marketDataType [this data-type]
       (println "Frozen? " (= data-type com.ib.controller.Types$MktDataType/Frozen)))
     (tickSnapshotEnd [this] (println "tick snapshot end"))
@@ -56,10 +66,15 @@
 
 (defn start []
   (let [api (api-ctrl)
-        c (create-contract "VXX")
-        row (create-row)]
+        contract (create-contract "VXX")
+        c (chan)
+        row (create-row c)]
     (.connect api "localhost" 7497 5)
-    (.reqTopMktData api c "" false row)
+    (.reqTopMktData api contract "" false row)
+
+    (go-loop []
+             (println (<! c))
+             (recur))
 
     (Thread/sleep 100000)
     (.cancelTopMktData api row)
