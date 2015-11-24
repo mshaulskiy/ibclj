@@ -20,11 +20,11 @@ public class MyIbController implements ApiController.IConnectionHandler {
 
         controller = new ApiController( this, new ApiConnection.ILogger() {
             public void log(String s) {  // inLogger
-                System.out.print(s);
+                //System.out.print(s);
             }
         }, new ApiConnection.ILogger() {
             public void log(String s) {  // outLogger
-                System.out.print(s);
+                //System.out.print(s);
             }
         } );
     }
@@ -105,16 +105,17 @@ public class MyIbController implements ApiController.IConnectionHandler {
         @Override public void tickPrice(NewTickType tickType, double price, int canAutoExecute) {
             switch( tickType) {
                 case BID:
-                    System.out.println("Bid: " + price);
+                    System.out.println(Thread.currentThread().getName() + Thread.currentThread().getId() + ", " + "Bid: " + price);
+
                     break;
                 case ASK:
-                    System.out.println("Ask: " + price);
+                    System.out.println(Thread.currentThread().getName() + Thread.currentThread().getId() + ", " + "Ask: " + price);
                     break;
                 case LAST:
-                    System.out.println("Last " + price);
+                    System.out.println(Thread.currentThread().getName() + Thread.currentThread().getId() + ", " + "Last " + price);
                     break;
                 case CLOSE:
-                    System.out.println("Close " + price);
+                    System.out.println(Thread.currentThread().getName() + Thread.currentThread().getId() + ", " + "Close " + price);
                     break;
             }
         }
