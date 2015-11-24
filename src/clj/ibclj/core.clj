@@ -4,7 +4,7 @@
              :refer [>! <! >!! <!! go chan buffer close! thread
                      alts! alts!! timeout go-loop]])
   [:import com.ib.controller.ApiController
-           (com.ib.controller ApiController$TopMktDataAdapter)
+           (com.ib.controller ApiController$TopMktDataAdapter NewContract)
            ])
 
 
@@ -20,10 +20,10 @@
 
     ))
 
-(defn create-contract [symbol]
+(defn create-contract [symbol type]
   (doto (com.ib.controller.NewContract.)
     (.symbol symbol)
-    (.secType com.ib.controller.Types$SecType/STK)
+    (.secType type)
     (.expiry "")
     (.strike 0.0)
     (.right com.ib.controller.Types$Right/None)
@@ -43,41 +43,58 @@
                                         ))))
 
 
-(defn create-row [c]
+(defn create-row [c ^NewContract contract]
   (reify
     com.ib.controller.ApiController$ITopMktDataHandler
     (tickPrice [this tick-type p auto-execute?]
       ;(println (.name tick-type) "price: " p)
-      (>!! c [(.name tick-type) p])
+      (>!! c [(.symbol contract) (.name tick-type) p])
       )
     (tickSize [this tick-type size]
       ;(println (.name tick-type) "size: " size)
-      (>!! c [(.name tick-type) size])
+      (>!! c [(.symbol contract) (.name tick-type) size])
       )
     (tickString [this tick-type val]
       ;(println (.name tick-type) "LastTime: " val)
-      (>!! c [(.name tick-type) val])
+      (>!! c [(.symbol contract) (.name tick-type) val])
       )
     (marketDataType [this data-type]
       (println "Frozen? " (= data-type com.ib.controller.Types$MktDataType/Frozen)))
     (tickSnapshotEnd [this] (println "tick snapshot end"))
     ))
 
+(defn contract-ctx [c sym type]
+  (let [contract (create-contract sym type)
+        row (create-row c contract)]
+    {:contract contract :sym sym :type type :row row}
+    ))
+
+(defn subscribe! [api ctx c]
+  (.reqTopMktData api (:contract ctx) "" false (:row ctx)))
+
+(defn unsubscribe! [api ctx]
+  (.cancelTopMktData api (:row ctx)))
 
 (defn start []
   (let [api (api-ctrl)
-        contract (create-contract "VXX")
         c (chan)
-        row (create-row c)]
+        vxx-ctx (contract-ctx c "VXX" com.ib.controller.Types$SecType/STK)
+        spy-ctx (contract-ctx c "SPY" com.ib.controller.Types$SecType/STK)
+]
     (.connect api "localhost" 7497 5)
-    (.reqTopMktData api contract "" false row)
+
+    (subscribe! api vxx-ctx c)
+    (subscribe! api spy-ctx c)
 
     (go-loop []
              (println (<! c))
              (recur))
 
     (Thread/sleep 100000)
-    (.cancelTopMktData api row)
+
+    (unsubscribe! api vxx-ctx)
+    (unsubscribe! api spy-ctx)
+
     (.disconnect api)))
 
 
@@ -85,3 +102,6 @@
   "the main function"
   []
   (start))
+
+
+(start)
