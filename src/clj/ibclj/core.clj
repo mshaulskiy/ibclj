@@ -48,15 +48,15 @@
     com.ib.controller.ApiController$ITopMktDataHandler
     (tickPrice [this tick-type p auto-execute?]
       ;(println (.name tick-type) "price: " p)
-      (>!! c [(.symbol contract) (.name tick-type) p])
+      (>!! c {:sym (.symbol contract) :type (.name tick-type) :price p})
       )
     (tickSize [this tick-type size]
       ;(println (.name tick-type) "size: " size)
-      (>!! c [(.symbol contract) (.name tick-type) size])
+      (>!! c {:sym (.symbol contract) :type (.name tick-type) :size size})
       )
     (tickString [this tick-type val]
       ;(println (.name tick-type) "LastTime: " val)
-      (>!! c [(.symbol contract) (.name tick-type) val])
+      (>!! c {:sym (.symbol contract) :type (.name tick-type) :val val})
       )
     (marketDataType [this data-type]
       (println "Frozen? " (= data-type com.ib.controller.Types$MktDataType/Frozen)))
@@ -87,8 +87,12 @@
     (subscribe! api spy-ctx c)
 
     (go-loop []
-             (println (<! c))
-             (recur))
+      (let [{:keys [sym] :as msg} (<! c)]
+        (println msg)
+        (if (= sym "VXX")
+          (println "********VXX")
+          (println "********SPY"))
+        (recur)))
 
     (Thread/sleep 100000)
 
