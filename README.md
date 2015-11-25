@@ -4,8 +4,8 @@ A Clojure library designed to ... well, that part is up to you.
 
 ## Usage
 
-* download latest.edemo.mac.jnlp from https://www.interactivebrokers.com
-* run latest.edemo.mac.jnlp
+* download latest.edemo.mac.jnlp from https://www.interactivebrokers.com/demo   (launch TWS Demo)
+* run latest.edemo.mac.jnlp   (it's a Webstart component)
 * open ActiveX port: Settings -> API -> enable ActiveX
 * git clone git@github.com:matlux/ibclj.git
 * cd ibclj
