@@ -9,7 +9,7 @@ A Clojure library designed to ... well, that part is up to you.
 * open ActiveX port: Settings -> API -> enable ActiveX
 * git clone git@github.com:matlux/ibclj.git
 * cd ibclj
-* mvn install:install-file -DgroupId=com.quantechlab -DartifactId=ibclient -Dversion=9.72.09 -Dpackaging=jar -Dfile=lib/ibclient-9.72.09.jar
+* mvn install:install-file -DgroupId=com.quantechlab -DartifactId=ibclient -Dversion=9.71.01 -Dpackaging=jar -Dfile=lib/ibclient-9.71.01.jar
 * lein run
 
 ## License
