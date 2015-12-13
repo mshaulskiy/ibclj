@@ -23,3 +23,14 @@ Make sure you create your database before trying to capture ticks, you can do th
     > (def db-client (influx/make-client {:db "ib_ticks"}))
 
     > (influx/create-db db-client)
+
+
+## Export data into a file 
+
+with one easy CURL cmd into their Web API
+
+    curl "http://localhost:8086/db/ib_ticks/series?u=root&p=root&q=select%20*%20from%20VXX_ticks%3B" > db/VXX_ticks.json
+
+## Import json data from file
+
+    curl -XPOST @db/VXX_ticks.json "http://hostb:8086/db/ib_ticks/series?u=root&p=root"
