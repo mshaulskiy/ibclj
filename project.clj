@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [com.quantechlab/ibclient "9.71.01"]
                  [org.clojure/core.async "0.2.374"]
-                 ]
+                 [capacitor "0.4.3"]]
   :java-source-paths ["src/java" "test/java"]
   :source-paths ["src/clj"]
   :main ibclj.core
