@@ -33,4 +33,4 @@ with one easy CURL cmd into their Web API
 
 ## Import json data from file
 
-    curl -XPOST @db/VXX_ticks.json "http://hostb:8086/db/ib_ticks/series?u=root&p=root"
+    curl -XPOST -d @db/VXX_ticks.json "http://hostb:8086/db/ib_ticks/series?u=root&p=root"
