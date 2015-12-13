@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jnlp codebase="https://download2.interactivebrokers.com/java/classes/" href="https://www.interactivebrokers.com/java/classes/latest.edemo.mac.jnlp">
+	<information>
+		<title>TWS Latest (954.2)</title>
+		<vendor>Interactive Brokers</vendor>
+	    	<homepage href="http://www.interactivebrokers.com"/>
+		<!-- mac has no icon -->
+		<description>Interactive Brokers Trader Workstation Demo</description>
+	</information>
+	
+	<security>
+		<all-permissions/>
+	</security>
+
+        <resources arch="x86_64">
+                <j2se java-vm-args="-Xmx768M -XX:MaxPermSize=256M" version="1.6+"/>
+                <property name="jnlp.selectedarch" value="x86_64"/>           
+		<property name="jnlp.gendate" value="Wed Nov  4 16:08:52 2015; https://www.interactivebrokers.com/java/classes/latest.edemo.mac.jnlp"/>
+        </resources>
+
+        <resources arch="amd64">
+                <j2se java-vm-args="-Xmx768M -XX:MaxPermSize=256M" version="1.6+"/>
+                <property name="jnlp.selectedarch" value="amd64"/>           
+		<property name="jnlp.gendate" value="Wed Nov  4 16:08:52 2015; https://www.interactivebrokers.com/java/classes/latest.edemo.mac.jnlp"/>
+        </resources>
+
+        <resources arch="x86">
+                <j2se java-vm-args="-Xmx768M -XX:MaxPermSize=160M" version="1.6+"/>
+                <property name="jnlp.selectedarch" value="x86"/>           
+		<property name="jnlp.gendate" value="Wed Nov  4 16:08:52 2015; https://www.interactivebrokers.com/java/classes/latest.edemo.mac.jnlp"/>
+        </resources>
+
+        <resources arch="">
+                <j2se java-vm-args="-Xmx768M -XX:MaxPermSize=160M" version="1.6+"/>
+                <property name="jnlp.selectedarch" value="default"/>           
+		<property name="jnlp.gendate" value="Wed Nov  4 16:08:52 2015; https://www.interactivebrokers.com/java/classes/latest.edemo.mac.jnlp"/>
+        </resources>
+
+	<resources>
+        <j2se java-vm-args="-Dsun.java2d.noddraw=true -Dswing.boldMetal=false -Dsun.locale.formatasdefault=true" version="1.7+"/>
+        <j2se java-vm-args="-Dsun.java2d.noddraw=true -Dswing.boldMetal=false" version="1.6"/>
+		<jar href="latest/twslaunch.latest.jar"/>
+		<property name="jnlp.twslaunch.jars" value="latest/jts4launch.latest.jar;total.2015b.jar"/> 
+		<property name="jnlp.twslaunch.start" value="latest/twslaunch.latest.jar"/>		
+		<property name="sun.java2d.noddraw" value="true"/>
+		<property name="jnlp.gendate" value="Wed Nov  4 16:08:52 2015; https://www.interactivebrokers.com/java/classes/latest.edemo.mac.jnlp"/>
+	</resources>
+        
+	<application-desc main-class="jclient.Launcher"> 
+		<argument>username=edemo</argument>
+		<argument>password=demouser</argument>
+		<argument>c:\ibjts</argument>
+		<argument>gdc1.ibllc.com:4000</argument>
+	</application-desc>
+</jnlp>

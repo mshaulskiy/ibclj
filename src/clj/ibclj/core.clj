@@ -2,11 +2,15 @@
   (:require [clojure.core.async
              :as a
              :refer [>! <! >!! <!! go chan buffer close! thread
-                     alts! alts!! timeout go-loop]])
+                     alts! alts!! timeout go-loop]]
+            [capacitor.core :as influx])
   [:import com.ib.controller.ApiController
            (com.ib.controller ApiController$TopMktDataAdapter)
            ])
 
+(def db-client (influx/make-client {:db "ib_ticks"}))
+
+;(influx/create-db db-client)
 
 
 (defn create-controller []
@@ -67,16 +71,25 @@
 
 
 (defn start []
-  (let [api (api-ctrl)
-        contract (create-contract "VXX")
+  (let [symbol "VXX"
+        series-name (str symbol "_ticks")
+        api (api-ctrl)
+        contract (create-contract symbol)
         c (chan)
         row (create-row c)]
     (.connect api "localhost" 7497 5)
     (.reqTopMktData api contract "" false row)
 
-    (go-loop []
-             (println (<! c))
-             (recur))
+    (let [tick (atom {})]
+      (go-loop []
+        (let [[type value] (<! c)]
+          (println series-name type value)
+          (if (= type "LAST_TIMESTAMP")
+            (do
+              (influx/post-points db-client series-name [@tick])
+              (reset! tick {:type type :value value}))
+            (swap! tick assoc type value))
+          (recur))))
 
     (Thread/sleep 100000)
     (.cancelTopMktData api row)
