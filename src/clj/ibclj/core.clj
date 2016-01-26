@@ -5,13 +5,15 @@
                      alts! alts!! timeout go-loop]]
             [capacitor.core :as influx])
   [:import com.ib.controller.ApiController
-           (com.ib.controller ApiController$TopMktDataAdapter)
+            (com.ib.controller ApiController$TopMktDataAdapter NewContract)
    ]
   (:gen-class))
 
 (def db-client (influx/make-client {:db "ib_ticks"}))
 
+;First time to create db
 ;(influx/create-db db-client)
+
 
 
 (defn create-controller []
@@ -26,10 +28,10 @@
 
     ))
 
-(defn create-contract [symbol]
+(defn create-contract [symbol type]
   (doto (com.ib.controller.NewContract.)
     (.symbol symbol)
-    (.secType com.ib.controller.Types$SecType/STK)
+    (.secType type)
     (.expiry "")
     (.strike 0.0)
     (.right com.ib.controller.Types$Right/None)
@@ -49,51 +51,76 @@
                                         ))))
 
 
-
-(defn create-row [c]
+(defn create-row [c ^NewContract contract]
   (reify
     com.ib.controller.ApiController$ITopMktDataHandler
     (tickPrice [this tick-type p auto-execute?]
       ;(println (.name tick-type) "price: " p)
-      (>!! c [(.name tick-type) p])
+      (>!! c {:sym (.symbol contract) :type (.name tick-type) :value p})
       )
     (tickSize [this tick-type size]
       ;(println (.name tick-type) "size: " size)
-      (>!! c [(.name tick-type) size])
+      (>!! c {:sym (.symbol contract) :type (.name tick-type) :value size})
       )
     (tickString [this tick-type val]
       ;(println (.name tick-type) "LastTime: " val)
-      (>!! c [(.name tick-type) val])
+      (>!! c {:sym (.symbol contract) :type (.name tick-type) :value val})
       )
     (marketDataType [this data-type]
       (println "Frozen? " (= data-type com.ib.controller.Types$MktDataType/Frozen)))
     (tickSnapshotEnd [this] (println "tick snapshot end"))
     ))
 
+(defn contract-ctx [c sym type]
+  (let [contract (create-contract sym type)
+        row (create-row c contract)]
+    {:contract contract :sym sym :type type :row row}
+    ))
+
+(defn subscribe! [api ctx c]
+  (.reqTopMktData api (:contract ctx) "" false (:row ctx)))
+
+(defn unsubscribe! [api ctx]
+  (.cancelTopMktData api (:row ctx)))
+
+(defn series-name [symbol]
+  (str symbol "_ticks"))
+
+(defn update-ticker [symbol row column value]
+  (if (= column "LAST_TIMESTAMP")
+              (do
+                (influx/post-points db-client (series-name symbol) [@row])
+                (reset! row {:type column }))
+              (swap! row assoc column value)))
+
+
 
 (defn start []
-  (let [symbol "VXX"
-        series-name (str symbol "_ticks")
-        api (api-ctrl)
-        contract (create-contract symbol)
+  (let [api (api-ctrl)
         c (chan)
-        row (create-row c)]
+        vxx-ctx (contract-ctx c "VXX" com.ib.controller.Types$SecType/STK)
+        spy-ctx (contract-ctx c "SPY" com.ib.controller.Types$SecType/STK)
+]
     (.connect api "localhost" 7497 5)
-    (.reqTopMktData api contract "" false row)
 
-    (let [tick (atom {})]
+    (subscribe! api vxx-ctx c)
+    (subscribe! api spy-ctx c)
+
+
+    (let [tickers {"VXX" (atom {})
+                 "SPY" (atom {})} ]
       (go-loop []
-        (let [[type value] (<! c)]
-          (println series-name type value)
-          (if (= type "LAST_TIMESTAMP")
-            (do
-              (influx/post-points db-client series-name [@tick])
-              (reset! tick {:type type }))
-            (swap! tick assoc type value))
+        (let [{:keys [sym type value]} (<! c)]
+          (println sym type value)
+          (update-ticker sym (tickers sym) type value)
           (recur))))
 
     (Thread/sleep (* 16 60 60 1000))
-    (.cancelTopMktData api row)
+
+    (unsubscribe! api vxx-ctx)
+    (unsubscribe! api spy-ctx)
+
+
     (.disconnect api)))
 
 
@@ -101,3 +128,6 @@
   "the main function"
   []
   (start))
+
+
+;(start)
