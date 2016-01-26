@@ -6,7 +6,8 @@
             [capacitor.core :as influx])
   [:import com.ib.controller.ApiController
            (com.ib.controller ApiController$TopMktDataAdapter)
-           ])
+   ]
+  (:gen-class))
 
 (def db-client (influx/make-client {:db "ib_ticks"}))
 
@@ -87,11 +88,11 @@
           (if (= type "LAST_TIMESTAMP")
             (do
               (influx/post-points db-client series-name [@tick])
-              (reset! tick {:type type :value value}))
+              (reset! tick {:type type }))
             (swap! tick assoc type value))
           (recur))))
 
-    (Thread/sleep 100000)
+    (Thread/sleep (* 16 60 60 1000))
     (.cancelTopMktData api row)
     (.disconnect api)))
 
