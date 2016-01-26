@@ -93,33 +93,34 @@
                 (reset! row {:type column }))
               (swap! row assoc column value)))
 
-
+(def tickers ["VXX" "SPY" "AAPL" "GOOG"])
 
 (defn start []
   (let [api (api-ctrl)
         c (chan)
-        vxx-ctx (contract-ctx c "VXX" com.ib.controller.Types$SecType/STK)
-        spy-ctx (contract-ctx c "SPY" com.ib.controller.Types$SecType/STK)
+        ctxs (map #(contract-ctx c % com.ib.controller.Types$SecType/STK) tickers)
+;        vxx-ctx (contract-ctx c "VXX" com.ib.controller.Types$SecType/STK)
+ ;       spy-ctx (contract-ctx c "SPY" com.ib.controller.Types$SecType/STK)
 ]
     (.connect api "localhost" 7497 5)
 
-    (subscribe! api vxx-ctx c)
-    (subscribe! api spy-ctx c)
+    (doseq [ctx ctxs]
+      (subscribe! api ctx c))
 
 
-    (let [tickers {"VXX" (atom {})
-                 "SPY" (atom {})} ]
+    (let [tick-data (->> tickers
+                         (map (fn [sym] [sym (atom {})]))
+                         (into {})) ]
       (go-loop []
         (let [{:keys [sym type value]} (<! c)]
           (println sym type value)
-          (update-ticker sym (tickers sym) type value)
+          (update-ticker sym (tick-data sym) type value)
           (recur))))
 
     (Thread/sleep (* 16 60 60 1000))
 
-    (unsubscribe! api vxx-ctx)
-    (unsubscribe! api spy-ctx)
-
+    (doseq [ctx ctxs]
+      (unsubscribe! api ctx))
 
     (.disconnect api)))
 
