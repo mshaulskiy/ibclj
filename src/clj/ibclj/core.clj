@@ -2,7 +2,8 @@
   (:require [clojure.core.async
              :as a
              :refer [>! <! >!! <!! go chan buffer close! thread
-                     alts! alts!! timeout go-loop]])
+                     alts! alts!! timeout go-loop]]
+            [capacitor.core :as influx])
   [:import com.ib.controller.ApiController
            (com.ib.controller ApiController$TopMktDataAdapter NewContract)
            ])
@@ -75,7 +76,18 @@
 (defn unsubscribe! [api ctx]
   (.cancelTopMktData api (:row ctx)))
 
-;(def api (atom nil))
+(defn series-name [symbol]
+  (str symbol "_ticks"))
+
+(defn update-ticker [symbol row column value]
+  (if (= column "LAST_TIMESTAMP")
+              (do
+                ;(influx/post-points db-client (series-name symbol) [@row])
+                (println "symbol=" symbol ", " @row)
+                (reset! row {:type column }))
+              (swap! row assoc column value)))
+
+(def tickers ["VXX" "SPY" "AAPL" "GOOG"])
 
 (defn start-api! []
   (let [api (api-ctrl)]
@@ -98,12 +110,17 @@
   (unsubscribe! api contract-ctx))
 
 
-(def api (start-api!))
-(def c (:chan (add! api {:symbol "VXX" :type com.ib.controller.Types$SecType/STK})))
+(defonce api (start-api!))
+;(def c (:chan (add! api {:symbol "VXX" :type com.ib.controller.Types$SecType/STK})))
 
 ;(def cvxx (chan))
 (def stop-chan (chan))
 ;(def vxx-ctx (contract-ctx cvxx {:symbol "VXX" :type com.ib.controller.Types$SecType/STK}))
+
+
+(def tick-data (->> tickers
+                    (map (fn [sym] [sym (atom {})]))
+                    (into {})))
 
 (defn start []
   (let [;;api (api-ctrl)
@@ -117,12 +134,24 @@
     ;(subscribe! api vxx-ctx cvxx)
     ;(add! api {:symbol "VXX" :type com.ib.controller.Types$SecType/STK})
 
-    (println "about to go-loop " c)
+    ;(println "about to go-loop " tick-channel)
+
+    ;(go-loop []
+    ;  (let [[{:keys [sym type] :as msg} _] (alts! [tick-channel stop-chan])]
+    ;    ;;(println "foobar")
+    ;    (if (= type "LAST_TIMESTAMP") (println "***" msg) (println msg))
+    ;    (if msg (recur))))
+
+
+    ;(let [tick-data (->> tickers
+    ;                     (map (fn [sym] [sym (atom {})]))
+    ;                     (into {})) ]
+    ;  )
 
     (go-loop []
-      (let [[{:keys [sym type] :as msg} _] (alts! [tick-channel stop-chan])]
-        ;;(println "foobar")
-        (if (= type "LAST_TIMESTAMP") (println "***" msg) (println msg))
+      (let [[{:keys [sym type value] :as msg} _] (alts! [tick-channel stop-chan])]
+        ;(println "just got a tick" msg ", sym=" sym  ", tick-data=" tick-data ",**** (tick-data sym)=" (tick-data sym))
+        (update-ticker sym (tick-data sym) type value)
         (if msg (recur))))
 
     ;(Thread/sleep 100000)
@@ -138,17 +167,28 @@
 
   (start)
 
+  (doseq [ticker tickers]
+    (add! api {:symbol ticker :type com.ib.controller.Types$SecType/STK}))
 
-  (def c )
+
+
+  (doseq [ctx ctxs]
+    (unsubscribe! api ctx))
+
+  ;(def c )
+  (:chan (add! api {:symbol "VXX" :type com.ib.controller.Types$SecType/STK}))
   (:chan (add! api {:symbol "SPY" :type com.ib.controller.Types$SecType/STK}))
   (:chan (add! api {:symbol "AAPL" :type com.ib.controller.Types$SecType/STK}))
   (:chan (add! api {:symbol "GOOG" :type com.ib.controller.Types$SecType/STK}))
 
 
 
-
+  
   (close! stop-chan)
   (stop-api! api)
+
+
+  (tick-data "SPY")
   )
 
 
