@@ -14,6 +14,15 @@
 ;First time to create db
 ;(influx/create-db db-client)
 
+(comment
+  ;Added Simple Moving Average calculations
+  ;5-day SMA: (11 + 12 + 13 + 14 + 15) / 5 = 13
+  ;can I use partition on dynamic list?
+
+  (defn average [lst] (/ (reduce + lst) (count lst)))
+  (defn moving-average [window lst] (map average (partition window 1 lst)))
+
+  )
 
 
 (defn create-controller []
@@ -89,11 +98,11 @@
 (defn update-ticker [symbol row column value]
   (if (= column "LAST_TIMESTAMP")
               (do
-                (influx/post-points db-client (series-name symbol) [@row])
+                (influx/write-point db-client [ (series-name symbol) {"symbol" symbol} @row])
                 (reset! row {:type column }))
               (swap! row assoc column value)))
 
-(def tickers ["VXX" "SPY" "AAPL" "GOOG"])
+(def tickers ["VXX" "SPY"])   ;; "AAPL" "GOOG"
 
 (defn start []
   (let [api (api-ctrl)
