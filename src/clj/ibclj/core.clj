@@ -19,10 +19,13 @@
   ;5-day SMA: (11 + 12 + 13 + 14 + 15) / 5 = 13
   ;can I use partition on dynamic list?
 
+
   (defn average [lst] (/ (reduce + lst) (count lst)))
   (defn moving-average [window lst] (map average (partition window 1 lst)))
 
   )
+
+()
 
 
 (defn create-controller []
@@ -95,6 +98,17 @@
 (defn series-name [symbol]
   (str symbol "_ticks"))
 
+
+(defn update-moving-avg [old-value-atom type new-price]
+  (if (= type "LAST")
+    (swap! old-value-atom (fn [{:keys [sum n]}]
+                            (let [new-n (inc n)
+                                  new-sum (+ sum new-price)
+                                  new-avg (/ new-sum new-n)]
+                              {:sum new-sum :n new-n :avg new-avg})))))
+
+
+
 (defn update-ticker [symbol row column value]
   (if (= column "LAST_TIMESTAMP")
               (do
@@ -119,11 +133,16 @@
 
     (let [tick-data (->> tickers
                          (map (fn [sym] [sym (atom {})]))
-                         (into {})) ]
+                         (into {}))
+          moving-avg (->> tickers
+                          (map (fn [sym] [sym (atom {:sum 0 :n 0})]))
+                          (into {}))]
       (go-loop []
         (let [{:keys [sym type value]} (<! c)]
           (println sym type value)
           (update-ticker sym (tick-data sym) type value)
+          (update-moving-avg (get moving-avg sym) type value)
+          (println sym @(get moving-avg sym) )
           (recur))))
 
     (Thread/sleep (* 16 60 60 1000))
