@@ -8,6 +8,7 @@
            (com.ib.controller ApiController$TopMktDataAdapter NewContract)
            ])
 
+(def db-client (influx/make-client {:db "ib_ticks"}))
 
 (defn create-controller []
   (reify
@@ -183,7 +184,7 @@
 
 
 
-  
+
   (close! stop-chan)
   (stop-api! api)
 

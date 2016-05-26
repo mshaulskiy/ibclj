@@ -1,6 +1,9 @@
 # ibclj
 
-An Clojure application using the Java Interactive Brokers API.
+The Clojure project to get financial market ticks data using the Java Interactive Brokers API.
+
+[![Build Status](https://travis-ci.org/nabacg/ibclj.svg?branch=master)](https://travis-ci.org/nabacg/ibclj.svg)
+
 
 ## Usage
 
