@@ -112,77 +112,60 @@
 
 
 (defonce api (start-api!))
-;(def c (:chan (add! api {:symbol "VXX" :type com.ib.controller.Types$SecType/STK})))
 
-;(def cvxx (chan))
 (def stop-chan (chan))
-;(def vxx-ctx (contract-ctx cvxx {:symbol "VXX" :type com.ib.controller.Types$SecType/STK}))
-
 
 (def tick-data (->> tickers
                     (map (fn [sym] [sym (atom {})]))
                     (into {})))
 
-(defn start []
+(def contract-ctxs (atom '()))
+
+(defn start-loop []
   (let [;;api (api-ctrl)
         ;;cvxx (chan)
         ;cspy (chan)
         ;vxx-ctx (contract-ctx cvxx "VXX" com.ib.controller.Types$SecType/STK)
 
         ]
-    ;(.connect api "localhost" 7497 5)
-
-    ;(subscribe! api vxx-ctx cvxx)
-    ;(add! api {:symbol "VXX" :type com.ib.controller.Types$SecType/STK})
-
-    ;(println "about to go-loop " tick-channel)
-
-    ;(go-loop []
-    ;  (let [[{:keys [sym type] :as msg} _] (alts! [tick-channel stop-chan])]
-    ;    ;;(println "foobar")
-    ;    (if (= type "LAST_TIMESTAMP") (println "***" msg) (println msg))
-    ;    (if msg (recur))))
-
-
-    ;(let [tick-data (->> tickers
-    ;                     (map (fn [sym] [sym (atom {})]))
-    ;                     (into {})) ]
-    ;  )
 
     (go-loop []
       (let [[{:keys [sym type value] :as msg} _] (alts! [tick-channel stop-chan])]
         ;(println "just got a tick" msg ", sym=" sym  ", tick-data=" tick-data ",**** (tick-data sym)=" (tick-data sym))
-        (update-ticker sym (tick-data sym) type value)
-        (if msg (recur))))
 
-    ;(Thread/sleep 100000)
+        (if msg
+          (do
+            (update-ticker sym (tick-data sym) type value)
+            (recur))
+          (println "leaving go-loop"))))
 
-    ;(unsubscribe! api vxx-ctx)
-    ;(unsubscribe! api spy-ctx)
-
-    ;(.disconnect api)
-    ;(println "start function about to finish")
     ))
+
+(defn start-subscriptions! []
+  (reset! contract-ctxs '())
+
+  (doseq [ticker tickers]
+    (swap! contract-ctxs conj (add! api {:symbol ticker :type com.ib.controller.Types$SecType/STK})))
+  )
+
+(defn stop-subscriptions! []
+  (doseq [cc @contract-ctxs]
+    (remove! api cc))
+
+  )
+
+(defn start! []
+  (start-loop)
+  (start-subscriptions!)
+  )
 
 (comment
 
-  (start)
+  (start!)
 
-  (doseq [ticker tickers]
-    (add! api {:symbol ticker :type com.ib.controller.Types$SecType/STK}))
-
-
-
-  (doseq [ctx ctxs]
-    (unsubscribe! api ctx))
-
-  ;(def c )
-  (:chan (add! api {:symbol "VXX" :type com.ib.controller.Types$SecType/STK}))
-  (:chan (add! api {:symbol "SPY" :type com.ib.controller.Types$SecType/STK}))
-  (:chan (add! api {:symbol "AAPL" :type com.ib.controller.Types$SecType/STK}))
-  (:chan (add! api {:symbol "GOOG" :type com.ib.controller.Types$SecType/STK}))
-
-
+  (start-loop)
+  (start-subscriptions!)
+  (stop-subscriptions!)
 
 
   (close! stop-chan)
@@ -196,9 +179,8 @@
 (defn -main
   "the main function"
   []
-  (start)
-  (doseq [ticker tickers]
-    (add! api {:symbol ticker :type com.ib.controller.Types$SecType/STK})))
+  (start!)
+  )
 
 (println "ibclj evaluated")
 ;(start)
