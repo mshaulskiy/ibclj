@@ -196,7 +196,9 @@
 (defn -main
   "the main function"
   []
-  (start))
+  (start)
+  (doseq [ticker tickers]
+    (add! api {:symbol ticker :type com.ib.controller.Types$SecType/STK})))
 
 (println "ibclj evaluated")
 ;(start)
