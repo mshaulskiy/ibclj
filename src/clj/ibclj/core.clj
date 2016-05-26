@@ -10,6 +10,23 @@
 
 (def db-client (influx/make-client {:db "ib_ticks"}))
 
+;First time to create db
+;(influx/create-db db-client)
+
+(comment
+  ;Added Simple Moving Average calculations
+  ;5-day SMA: (11 + 12 + 13 + 14 + 15) / 5 = 13
+  ;can I use partition on dynamic list?
+
+
+  (defn average [lst] (/ (reduce + lst) (count lst)))
+  (defn moving-average [window lst] (map average (partition window 1 lst)))
+
+  )
+
+()
+
+
 (defn create-controller []
   (reify
     com.ib.controller.ApiController$IConnectionHandler
@@ -80,15 +97,26 @@
 (defn series-name [symbol]
   (str symbol "_ticks"))
 
+
+(defn update-moving-avg [old-value-atom type new-price]
+  (if (= type "LAST")
+    (swap! old-value-atom (fn [{:keys [sum n]}]
+                            (let [new-n (inc n)
+                                  new-sum (+ sum new-price)
+                                  new-avg (/ new-sum new-n)]
+                              {:sum new-sum :n new-n :avg new-avg})))))
+
+
+
 (defn update-ticker [symbol row column value]
   (if (= column "LAST_TIMESTAMP")
               (do
-                ;(influx/post-points db-client (series-name symbol) [@row])
+                (influx/write-point db-client [ (series-name symbol) {"symbol" symbol} @row])
                 (println "symbol=" symbol ", " @row)
                 (reset! row {:type column }))
               (swap! row assoc column value)))
 
-(def tickers ["VXX" "SPY" "AAPL" "GOOG"])
+(def tickers ["VXX" "SPY"])   ;; "AAPL" "GOOG"
 
 (defn start-api! []
   (let [api (api-ctrl)]
@@ -119,6 +147,10 @@
                     (map (fn [sym] [sym (atom {})]))
                     (into {})))
 
+(def moving-avg (->> tickers
+                     (map (fn [sym] [sym (atom {:sum 0 :n 0})]))
+                     (into {})))
+
 (def contract-ctxs (atom '()))
 
 (defn start-loop []
@@ -136,6 +168,8 @@
         (if msg
           (do
             (update-ticker sym (tick-data sym) type value)
+            (update-moving-avg (get moving-avg sym) type value)
+            (println sym @(get moving-avg sym) )
             (recur))
           (println "leaving go-loop"))))
 
