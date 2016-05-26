@@ -1,12 +1,12 @@
 ## MAC OS Installation
 we need to install InfluxDB 0.8 as it's the only one Capacitor supports atm, run following command
 
-    > brew install homebrew/versions/influxdb08
+    > brew install influxdb
 
 ## Running Influx 
 start db using config file provided with this repo, the default one seems to fail. 
 
-    >  influxdb -config=IBCLJ_ROOT_FOLDER/db/influxdb.conf 
+    >  influxd -config /usr/local/etc/influxdb.conf
 
 Config file is prepared for this command to be run in project's root directory. if you start db from other destination you might want to consider changing logs and data storage paths.
 
@@ -24,6 +24,11 @@ Make sure you create your database before trying to capture ticks, you can do th
 
     > (influx/create-db db-client)
 
+## Query DB
+
+    > influx
+    > use ib_ticks
+    > select * from VXX_ticks
 
 ## Export data into a file 
 
